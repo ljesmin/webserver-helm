@@ -1,0 +1,38 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed if you also want to create GitHub Releases
+      packages: write      # needed to push to GHCR
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
+            --username ${{ github.actor }} \
+            --password-stdin
+
+      - name: Package Helm chart
+        run: |
+          helm dependency update ./charts/myapp
+          helm package ./charts/myapp --destination ./packages
+
+      - name: Push Helm chart to GHCR
+        run: |
+          CHART_VERSION=$(grep '^version:' ./charts/myapp/Chart.yaml | awk '{print $2}')
+          helm push ./packages/myapp-${CHART_VERSION}.tgz oci://ghcr.io/${{ github.repository }}/charts
+
