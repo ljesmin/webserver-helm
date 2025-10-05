@@ -28,11 +28,11 @@ jobs:
 
       - name: Package Helm chart
         run: |
-          helm dependency update ./charts/myapp
-          helm package ./charts/myapp --destination ./packages
+          helm dependency update .
+          helm package . --destination ./packages
 
       - name: Push Helm chart to GHCR
         run: |
-          CHART_VERSION=$(grep '^version:' ./charts/myapp/Chart.yaml | awk '{print $2}')
-          helm push ./packages/myapp-${CHART_VERSION}.tgz oci://ghcr.io/${{ github.repository }}/charts
+          CHART_VERSION=$(grep '^version:' Chart.yaml | awk '{print $2}')
+          helm push ./packages/webserver-${CHART_VERSION}.tgz oci://ghcr.io/${{ github.repository }}/charts
 
